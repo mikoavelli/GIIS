@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 
 from line_algorithms import (
     DDA,
@@ -27,9 +28,9 @@ class DrawingApp(tk.Tk):
         self._start_x = None
         self._start_y = None
 
-        self.current_line_algorithm = None
-        self.current_curve_algorithm = None
-        self.debug_mode = False
+        self._current_line_algorithm = None
+        self._current_curve_algorithm = None
+        self._debug_mode = False
 
     def _create_menu(self):
         menubar = tk.Menu(self)
@@ -47,9 +48,8 @@ class DrawingApp(tk.Tk):
         curve_menu.add_command(label="Parabola", command=lambda: self._set_curve_algorithm("Parabola"))
         menubar.add_cascade(label="Curve", menu=curve_menu)
 
-        menubar.add_command(label="Clear", command=lambda: self._clear_canvas)
-
-        menubar.add_command(label="Debug", command=self._toggle_debug_mode)
+        menubar.add_command(label="Clear", command=self._clear_canvas)
+        menubar.add_checkbutton(label="Debug", command=self._toggle_debug_mode)
 
         self.config(menu=menubar)
 
@@ -61,15 +61,71 @@ class DrawingApp(tk.Tk):
 
     def _clear_canvas(self):
         self._canvas.delete("all")
+        self._draw_grid()
 
     def _toggle_debug_mode(self):
-        self.debug_mode = not self.debug_mode
+        self._debug_mode = not self._debug_mode
 
     def _on_canvas_click(self, event):
-        self._start_x = event.x // self._grid_size
-        self._start_y = event.y // self._grid_size
+        if any((
+                self._current_line_algorithm,
+                self._current_curve_algorithm
+        )) is False:
+            messagebox.showwarning('Warning', 'No algorithm selected.')
+            return
 
-        # print(self._start_x, self._start_y)
+        if self._start_x is None:
+            self._start_x = event.x // self._grid_size
+            self._start_y = event.y // self._grid_size
+
+            self._canvas.create_oval(event.x - 3, event.y - 3, event.x + 3, event.y + 3, fill="red")
+        else:
+            end_x = event.x // self._grid_size
+            end_y = event.y // self._grid_size
+
+            self._canvas.create_oval(event.x - 3, event.y - 3, event.x + 3, event.y + 3, fill="red")
+
+            if self._current_line_algorithm is not None:
+                algorithm = self._current_line_algorithm(self._start_x, self._start_y, end_x, end_y)
+            elif self._current_curve_algorithm is not None:
+                algorithm = self._current_curve_algorithm(self._start_x, self._start_y, end_x, end_y)
+            points = algorithm.get_points()
+
+            if self._debug_mode:
+                self._draw_points_with_latency(points, 0)
+            else:
+                self._draw_points(points)
+
+            self._start_x = None
+            self._start_y = None
+
+    def _draw_points_with_latency(self, points, index):
+        if index >= len(points):
+            return
+        x, y, color = points[index]
+        self._canvas.create_rectangle(
+            x * self._grid_size,
+            y * self._grid_size,
+            (x + 1) * self._grid_size,
+            (y + 1) * self._grid_size,
+            outline="black",
+            fill=color
+        )
+        self.after(50, lambda: self._draw_points_with_latency(points, index + 1))
+
+    def _draw_points(self, points):
+        for point in points:
+            x, y, color = point
+            self._canvas.create_rectangle(
+                x * self._grid_size,
+                y * self._grid_size,
+                (x + 1) * self._grid_size,
+                (y + 1) * self._grid_size,
+                outline='black',
+                fill=color
+            )
+            if self._debug_mode:
+                pass
 
     def _draw_grid(self):
         self._canvas.delete("grid")
@@ -87,13 +143,13 @@ class DrawingApp(tk.Tk):
 
         match algorithm:
             case "DDA":
-                self.current_line_algorithm = algorithm
+                self._current_line_algorithm = DDA
                 self.title("DDA")
             case "Bresenham":
-                self.current_line_algorithm = algorithm
+                self._current_line_algorithm = Bresenham
                 self.title("Bresenham")
             case "Wu":
-                self.current_line_algorithm = algorithm
+                self._current_line_algorithm = Wu
                 self.title("Wu")
 
     def _set_curve_algorithm(self, algorithm):
@@ -101,16 +157,16 @@ class DrawingApp(tk.Tk):
 
         match algorithm:
             case "Circle":
-                self.current_curve_algorithm = algorithm
+                self._current_curve_algorithm = Circle
                 self.title("Circle")
             case "Ellipse":
-                self.current_curve_algorithm = algorithm
+                self._current_curve_algorithm = Ellipse
                 self.title("Ellipse")
             case "Hyperbola":
-                self.current_curve_algorithm = algorithm
+                self._current_curve_algorithm = Hyperbola
                 self.title("Hyperbola")
             case "Parabola":
-                self.current_curve_algorithm = algorithm
+                self._current_curve_algorithm = Parabola
                 self.title("Parabola")
 
     def _uncheck_all_algorithms(self):
