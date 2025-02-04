@@ -22,7 +22,7 @@ class DrawingApp(tk.Tk):
         self._create_menu()
         self._create_canvas()
 
-        self._grid_size = 20
+        self._grid_size = 5
         self._draw_grid()
 
         self._start_x = None
