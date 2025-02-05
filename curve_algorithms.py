@@ -21,7 +21,7 @@ class Circle(CurveAlgorithm):
         d = 3 - 2 * radius
         while x <= y:
             for dx, dy in [(x, y), (-x, y), (x, -y), (-x, -y), (y, x), (-y, x), (y, -x), (-y, -x)]:
-                points.append([self.x0 + dx, self.y0 + dy, "black"])
+                points.append((self.x0 + dx, self.y0 + dy, "black"))
             if d < 0:
                 d += 4 * x + 6
             else:
@@ -41,6 +41,7 @@ class Ellipse(CurveAlgorithm):
         d1 = b * b - a * a * b + 0.25 * a * a
         dx = 2 * b * b * x
         dy = 2 * a * a * y
+        # Horizontal movement
         while dx < dy:
             points.extend([(xc + x, yc + y, "black"), (xc - x, yc + y, "black"),
                            (xc + x, yc - y, "black"), (xc - x, yc - y, "black")])
@@ -55,6 +56,7 @@ class Ellipse(CurveAlgorithm):
                 dy -= 2 * a * a
                 d1 += dx - dy + b * b
         d2 = b * b * (x + 0.5) * (x + 0.5) + a * a * (y - 1) * (y - 1) - a * a * b * b
+        # Vertical movement
         while y >= 0:
             points.extend([(xc + x, yc + y, "black"), (xc - x, yc + y, "black"),
                            (xc + x, yc - y, "black"), (xc - x, yc - y, "black")])
@@ -72,6 +74,7 @@ class Ellipse(CurveAlgorithm):
 
 
 class Hyperbola(CurveAlgorithm):
+    #  y = b * sqrt(1 + (x/a) ** 2)
     def get_points(self):
         points = []
         a = max(abs(self.x1 - self.x0), 1)
@@ -86,6 +89,7 @@ class Hyperbola(CurveAlgorithm):
 
 
 class Parabola(CurveAlgorithm):
+    # y = x ** 2 / 4 * p
     def get_points(self):
         points = []
         p = max(abs(self.y1 - self.y0) // 2, 1)

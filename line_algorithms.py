@@ -7,6 +7,7 @@ class LineAlgorithm:
         self.y0 = y0
         self.x1 = x1
         self.y1 = y1
+        self.color = "black"
 
     def get_points(self):
         pass
@@ -24,7 +25,7 @@ class DDA(LineAlgorithm):
         y_inc = dy / steps
         x, y = self.x0, self.y0
         for i in range(steps + 1):
-            points.append((round(x), round(y), "black"))
+            points.append((round(x), round(y), self.color))
             x += x_inc
             y += y_inc
         return points
@@ -41,7 +42,7 @@ class Bresenham(LineAlgorithm):
         err = dx - dy
 
         while True:
-            points.append((x0, y0, "black"))
+            points.append((x0, y0, self.color))
             if x0 == x1 and y0 == y1:
                 break
             e2 = 2 * err
@@ -61,7 +62,7 @@ class Wu(LineAlgorithm):
         x1, y1 = self.x1, self.y1
 
         if x0 == x1 and y0 == y1:
-            return [(x0, y0, "#000000")]
+            return [(x0, y0, self.color)]
 
         dx = x1 - x0
         dy = y1 - y0

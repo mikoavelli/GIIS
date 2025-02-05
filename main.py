@@ -12,6 +12,11 @@ from curve_algorithms import (
     Hyperbola,
     Parabola
 )
+from parametric_algorithms import (
+    HermiteAlgorithm,
+    BezierAlgorithm,
+    BSplineAlgorithm
+)
 
 
 class DrawingApp(tk.Tk):
@@ -30,6 +35,7 @@ class DrawingApp(tk.Tk):
 
         self._current_line_algorithm = None
         self._current_curve_algorithm = None
+        self._current_parametric_algorithm = None
         self._debug_mode = False
 
     def _create_menu(self):
@@ -47,6 +53,12 @@ class DrawingApp(tk.Tk):
         curve_menu.add_command(label="Ellipse", command=lambda: self._set_curve_algorithm("Ellipse"))
         curve_menu.add_command(label="Parabola", command=lambda: self._set_curve_algorithm("Parabola"))
         menubar.add_cascade(label="Curve", menu=curve_menu)
+
+        parabola_menu = tk.Menu(menubar, tearoff=0)
+        parabola_menu.add_command(label="Hermite", command=lambda: self._set_parametric_algorithm("Hermite"))
+        parabola_menu.add_command(label="Bezier", command=lambda: self._set_parametric_algorithm("Bezier"))
+        parabola_menu.add_command(label="BSpline", command=lambda: self._set_parametric_algorithm("BSpline"))
+        menubar.add_cascade(label="Parametric", menu=parabola_menu)
 
         menubar.add_command(label="Clear", command=self._clear_canvas)
         menubar.add_checkbutton(label="Debug", command=self._toggle_debug_mode)
@@ -69,7 +81,8 @@ class DrawingApp(tk.Tk):
     def _on_canvas_click(self, event):
         if any((
                 self._current_line_algorithm,
-                self._current_curve_algorithm
+                self._current_curve_algorithm,
+                self._current_parametric_algorithm,
         )) is False:
             messagebox.showwarning('Warning', 'No algorithm selected.')
             return
@@ -89,6 +102,10 @@ class DrawingApp(tk.Tk):
                 algorithm = self._current_line_algorithm(self._start_x, self._start_y, end_x, end_y)
             elif self._current_curve_algorithm is not None:
                 algorithm = self._current_curve_algorithm(self._start_x, self._start_y, end_x, end_y)
+            elif self._current_parametric_algorithm is not None:
+                algorithm = self._current_parametric_algorithm(self._start_x, self._start_y, end_x, end_y)
+            else:
+                raise "'algorithm' variable is undeclared"
             points = algorithm.get_points()
 
             if self._debug_mode:
@@ -111,6 +128,7 @@ class DrawingApp(tk.Tk):
             outline="black",
             fill=color
         )
+        print(f"Point: {x:5} {y:5}")
         self.after(50, lambda: self._draw_points_with_latency(points, index + 1))
 
     def _draw_points(self, points):
@@ -169,9 +187,24 @@ class DrawingApp(tk.Tk):
                 self._current_curve_algorithm = Parabola
                 self.title("Parabola")
 
+    def _set_parametric_algorithm(self, algorithm):
+        self._uncheck_all_algorithms()
+
+        match algorithm:
+            case "Hermite":
+                self._current_parametric_algorithm = HermiteAlgorithm
+                self.title("Hermite")
+            case "Bezier":
+                self._current_parametric_algorithm = BezierAlgorithm
+                self.title("Bezier")
+            case "BSpline":
+                self._current_parametric_algorithm = BSplineAlgorithm
+                self.title("BSpline")
+
     def _uncheck_all_algorithms(self):
         self._current_line_algorithm = None
         self._current_curve_algorithm = None
+        self._current_parametric_algorithm = None
 
 
 def main():
