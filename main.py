@@ -1,3 +1,5 @@
+import os
+import subprocess
 import tkinter as tk
 from tkinter import messagebox
 
@@ -36,6 +38,7 @@ class DrawingApp(tk.Tk):
         self._current_line_algorithm = None
         self._current_curve_algorithm = None
         self._current_parametric_algorithm = None
+
         self._debug_mode = False
 
     def _create_menu(self):
@@ -60,6 +63,7 @@ class DrawingApp(tk.Tk):
         parabola_menu.add_command(label="BSpline", command=lambda: self._set_parametric_algorithm("BSpline"))
         menubar.add_cascade(label="Parametric", menu=parabola_menu)
 
+        menubar.add_command(label="3D", command=self._launch_3d_script)
         menubar.add_command(label="Clear", command=self._clear_canvas)
         menubar.add_checkbutton(label="Debug", command=self._toggle_debug_mode)
 
@@ -82,7 +86,7 @@ class DrawingApp(tk.Tk):
         if any((
                 self._current_line_algorithm,
                 self._current_curve_algorithm,
-                self._current_parametric_algorithm,
+                self._current_parametric_algorithm
         )) is False:
             messagebox.showwarning('Warning', 'No algorithm selected.')
             return
@@ -106,12 +110,12 @@ class DrawingApp(tk.Tk):
                 algorithm = self._current_parametric_algorithm(self._start_x, self._start_y, end_x, end_y)
             else:
                 raise "'algorithm' variable is undeclared"
-            points = algorithm.get_points()
+            points_to_draw = algorithm.get_points()
 
             if self._debug_mode:
-                self._draw_points_with_latency(points, 0)
+                self._draw_points_with_latency(points_to_draw, 0)
             else:
-                self._draw_points(points)
+                self._draw_points(points_to_draw)
 
             self._start_x = None
             self._start_y = None
@@ -205,6 +209,19 @@ class DrawingApp(tk.Tk):
         self._current_line_algorithm = None
         self._current_curve_algorithm = None
         self._current_parametric_algorithm = None
+
+    @staticmethod
+    def _launch_3d_script():
+        script_name = "3d_algorithms.py"
+        current_directory = os.getcwd()
+        script_path = os.path.join(current_directory, script_name)
+        if os.path.isfile(script_path):
+            try:
+                subprocess.run(['python3', script_path], check=True)
+            except subprocess.CalledProcessError as e:
+                messagebox.showerror('Error', f'Error while executing script: {e}')
+        else:
+            messagebox.showerror('Error', 'Script not found.')
 
 
 def main():
