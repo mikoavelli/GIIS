@@ -2,15 +2,12 @@ import math
 
 
 class CurveAlgorithm:
-    def __init__(self, x0, y0, x1, y1):
+    def __init__(self, x0, y0, x1, y1, color="green"):
         self.x0 = x0
         self.y0 = y0
         self.x1 = x1
         self.y1 = y1
-        self.color = "black"
-
-    def get_points(self):
-        pass
+        self.color = color
 
 
 class Circle(CurveAlgorithm):
@@ -21,7 +18,7 @@ class Circle(CurveAlgorithm):
         d = 3 - 2 * radius
         while x <= y:
             for dx, dy in [(x, y), (-x, y), (x, -y), (-x, -y), (y, x), (-y, x), (y, -x), (-y, -x)]:
-                points.append((self.x0 + dx, self.y0 + dy, "black"))
+                points.append((self.x0 + dx, self.y0 + dy, self.color))
             if d < 0:
                 d += 4 * x + 6
             else:
@@ -43,8 +40,8 @@ class Ellipse(CurveAlgorithm):
         dy = 2 * a * a * y
         # Horizontal movement
         while dx < dy:
-            points.extend([(xc + x, yc + y, "black"), (xc - x, yc + y, "black"),
-                           (xc + x, yc - y, "black"), (xc - x, yc - y, "black")])
+            points.extend([(xc + x, yc + y, self.color), (xc - x, yc + y, self.color),
+                           (xc + x, yc - y, self.color), (xc - x, yc - y, self.color)])
             if d1 < 0:
                 x += 1
                 dx += 2 * b * b
@@ -58,8 +55,8 @@ class Ellipse(CurveAlgorithm):
         d2 = b * b * (x + 0.5) * (x + 0.5) + a * a * (y - 1) * (y - 1) - a * a * b * b
         # Vertical movement
         while y >= 0:
-            points.extend([(xc + x, yc + y, "black"), (xc - x, yc + y, "black"),
-                           (xc + x, yc - y, "black"), (xc - x, yc - y, "black")])
+            points.extend([(xc + x, yc + y, self.color), (xc - x, yc + y, self.color),
+                           (xc + x, yc - y, self.color), (xc - x, yc - y, self.color)])
             if d2 > 0:
                 y -= 1
                 dy -= 2 * a * a
@@ -82,7 +79,7 @@ class Hyperbola(CurveAlgorithm):
         for x in range(-a, a + 1):
             try:
                 y = int(b * math.sqrt(1 + (x / a) ** 2))
-                points.extend([(self.x0 + x, self.y0 + y, "black"), (self.x0 + x, self.y0 - y, "black")])
+                points.extend([(self.x0 + x, self.y0 + y, self.color), (self.x0 + x, self.y0 - y, self.color)])
             except ValueError:
                 continue
         return points
@@ -96,7 +93,7 @@ class Parabola(CurveAlgorithm):
         for x in range(-abs(self.x1 - self.x0), abs(self.x1 - self.x0) + 1):
             try:
                 y = int((x ** 2) / (4 * p))
-                points.append((self.x0 + x, self.y0 + y, "black"))
+                points.append((self.x0 + x, self.y0 + y, self.color))
             except ValueError:
                 continue
         return points

@@ -63,7 +63,7 @@ class DrawingApp(tk.Tk):
         parabola_menu.add_command(label="BSpline", command=lambda: self._set_parametric_algorithm("BSpline"))
         menubar.add_cascade(label="Parametric", menu=parabola_menu)
 
-        menubar.add_command(label="3D", command=self._launch_3d_script)
+        menubar.add_command(label="3D", command=lambda: self._launch_script("3d_algorithms.py"))
         menubar.add_command(label="Clear", command=self._clear_canvas)
         menubar.add_checkbutton(label="Debug", command=self._toggle_debug_mode)
 
@@ -146,8 +146,6 @@ class DrawingApp(tk.Tk):
                 outline='black',
                 fill=color
             )
-            if self._debug_mode:
-                pass
 
     def _draw_grid(self):
         self._canvas.delete("grid")
@@ -211,8 +209,7 @@ class DrawingApp(tk.Tk):
         self._current_parametric_algorithm = None
 
     @staticmethod
-    def _launch_3d_script():
-        script_name = "3d_algorithms.py"
+    def _launch_script(script_name):
         current_directory = os.getcwd()
         script_path = os.path.join(current_directory, script_name)
         if os.path.isfile(script_path):

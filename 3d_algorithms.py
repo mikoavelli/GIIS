@@ -28,7 +28,9 @@ def load_object(filename):
 
 
 def apply_transformation(vertices, matrix):
+    # Добавляем к вершинам столбец единиц для работы с однородными координатами.
     vertices_homogeneous = np.hstack((vertices[:, :3], np.ones((vertices.shape[0], 1))))
+    # Умножаем матрицу вершин на транспонированную матрицу преобразования.
     transformed_vertices = np.dot(vertices_homogeneous, matrix.T)
     return transformed_vertices
 

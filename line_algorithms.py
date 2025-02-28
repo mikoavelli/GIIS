@@ -2,15 +2,12 @@ import math
 
 
 class LineAlgorithm:
-    def __init__(self, x0, y0, x1, y1):
+    def __init__(self, x0, y0, x1, y1, color="black"):
         self.x0 = x0
         self.y0 = y0
         self.x1 = x1
         self.y1 = y1
-        self.color = "black"
-
-    def get_points(self):
-        pass
+        self.color = color
 
 
 class DDA(LineAlgorithm):
