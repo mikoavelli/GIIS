@@ -3,22 +3,9 @@ import subprocess
 import tkinter as tk
 from tkinter import messagebox
 
-from line_algorithms import (
-    DDA,
-    Bresenham,
-    Wu
-)
-from curve_algorithms import (
-    Circle,
-    Ellipse,
-    Hyperbola,
-    Parabola
-)
-from parametric_algorithms import (
-    HermiteAlgorithm,
-    BezierAlgorithm,
-    BSplineAlgorithm
-)
+from scripts.line_algorithms import DDA, Bresenham, Wu
+from scripts.curve_algorithms import Circle, Ellipse, Hyperbola, Parabola
+from scripts.parametric_algorithms import HermiteAlgorithm, BezierAlgorithm, BSplineAlgorithm
 
 
 class DrawingApp(tk.Tk):

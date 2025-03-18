@@ -1,8 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from line_algorithms import DDA, Bresenham, Wu
-from polygon_algorithms import Polygon, Graham, Jarvis
+from scripts.line_algorithms import DDA, Bresenham, Wu
+from scripts.polygon_algorithms import PolygonAlgorithm, Graham, Jarvis
+from scripts.fill_algorithms import ET, AEL, Flood, LBL
+from scripts.point_check import is_point_inside
 
 
 class DrawingApp(tk.Tk):
@@ -15,6 +17,8 @@ class DrawingApp(tk.Tk):
 
         self._current_line_algorithm = None
         self._current_polygon_algorithm = None
+        self._current_fill_algorithm = None
+        self._fill_algorithm = {}
 
         self._points = []
         self.intersect_line = None
@@ -41,6 +45,13 @@ class DrawingApp(tk.Tk):
         polygon_menu.add_command(label="Check convexity", command=self._check_convexity)
         menubar.add_cascade(label="Polygon", menu=polygon_menu)
 
+        fill_menu = tk.Menu(menubar, tearoff=0)
+        fill_menu.add_command(label="ET", command=lambda: self._set_fill_algorithm('ET'))
+        fill_menu.add_command(label="AEL", command=lambda: self._set_fill_algorithm('AEL'))
+        fill_menu.add_command(label="Flood", command=lambda: self._set_fill_algorithm('Flood'))
+        fill_menu.add_command(label="LBL", command=lambda: self._set_fill_algorithm('LBL'))
+        menubar.add_cascade(label="Filling", menu=fill_menu)
+
         menubar.add_command(label="Find Intersection", command=self._find_intersection)
         menubar.add_command(label="Clear", command=self._clear_canvas)
         menubar.add_checkbutton(label="Debug", command=self._toggle_debug_mode)
@@ -56,6 +67,8 @@ class DrawingApp(tk.Tk):
         self._points.clear()
         self.intersect_point = None
         self.intersect_line = None
+        self._current_fill_algorithm = None
+        self._fill_algorithm = {}
 
     def _toggle_debug_mode(self):
         self._debug_mode = not self._debug_mode
@@ -71,10 +84,11 @@ class DrawingApp(tk.Tk):
         if self._current_line_algorithm is None:
             messagebox.showerror("Error", "No line algorithm selected")
             return
-
-        algorithm = self._current_line_algorithm(x0, y0, x1, y1, color=color)
-        points = algorithm.get_points()
-
+        if x0 == x1 and y0 == y1:
+            points = [(x0, y0, color)]
+        else:
+            algorithm = self._current_line_algorithm(x0, y0, x1, y1, color=color)
+            points = algorithm.get_points()
         if self._debug_mode:
             self._draw_points_with_latency(points, 0)
             return
@@ -86,6 +100,7 @@ class DrawingApp(tk.Tk):
     def _draw_points_with_latency(self, points, index):
         if index >= len(points):
             return
+
         x, y, draw_color = points[index]
         self._canvas.create_rectangle(x, y, x, y, outline=draw_color, fill=draw_color)
         self.after(self._debug_latency, lambda: self._draw_points_with_latency(points, index + 1))
@@ -102,7 +117,7 @@ class DrawingApp(tk.Tk):
                 self._current_line_algorithm = Wu
 
         self.title(algorithm)
-        print(f"Selected line algorrithm: {algorithm}")
+        print(f"Selected line algorithm: {algorithm}")
 
     def _set_polygon_algorithm(self, algorithm):
         if len(self._points) < 3:
@@ -116,23 +131,59 @@ class DrawingApp(tk.Tk):
                 self._current_polygon_algorithm = Jarvis
 
         self.title(algorithm)
-        print(f"Selected polygon algorrithm: {algorithm}")
+        print(f"Selected polygon algorithm: {algorithm}")
         self._draw_polygon()
+
+    def _set_fill_algorithm(self, algorithm):
+        if len(self._points) < 3:
+            messagebox.showerror("Error", "First create a polygon")
+            return
+
+        match algorithm:
+            case "ET":
+                self._current_fill_algorithm = ET
+            case "AEL":
+                self._current_fill_algorithm = AEL
+            case "Flood":
+                self._current_fill_algorithm = Flood
+            case "LBL":
+                self._current_fill_algorithm = LBL
+
+        self.title(algorithm)
+        print(f"Selected polygon algorithm: {algorithm}")
+
+        def on_click(event):
+            x, y = event.x, event.y
+            if not is_point_inside(self._points, x, y):
+                messagebox.showerror("Error", "Point must be inside polygon")
+            else:
+                self._fill(x, y)
+
+            self._canvas.unbind("<Button-1>")
+            self._canvas.bind("<Button-1>", self._add_point)
+
+        self._canvas.bind("<Button-1>", on_click)
 
     def _draw_polygon(self):
         algorithm = self._current_polygon_algorithm(self._points)
         points = algorithm.get_points()
 
-        self._canvas.delete("polygon")
+        # self._canvas.delete("polygon")
         for i in range(len(points)):
             self._draw_points(*points[i], *points[(i + 1) % len(points)], color="red")
+
+    def _fill(self, x, y):
+        algorithm = self._current_fill_algorithm(self._points, x, y)
+        points = algorithm.get_points()
+        for i in range(len(points)):
+            self._draw_points(*points[i], color="blue")
 
     def _check_convexity(self):
         if len(self._points) < 3:
             messagebox.showerror("Error", "Not enough points to check convexity")
             return
 
-        normals = Polygon(self._points).check_convexity()
+        normals = PolygonAlgorithm(self._points).check_convexity()
         if normals is None:
             messagebox.showinfo("Result", "Polygon is not convex")
         else:
@@ -202,55 +253,14 @@ class DrawingApp(tk.Tk):
 
         def on_click(event):
             x, y = event.x, event.y
-            if self.is_point_inside(x, y):
+            if is_point_inside(self._points, x, y):
                 messagebox.showinfo("Result", f"Point ({x}, {y}) is in polygon.")
             else:
-                messagebox.showinfo("Результат", f"Point ({x}, {y}) is not in polygon.")
+                messagebox.showinfo("Result", f"Point ({x}, {y}) is not in polygon.")
             self._canvas.unbind("<Button-1>")
             self._canvas.bind("<Button-1>", self._add_point)
 
         self._canvas.bind("<Button-1>", on_click)
-
-    def is_point_inside(self, x, y):
-        if len(self._points) < 3:
-            return False
-
-        n = len(self._points)
-        inside = False
-
-        for i in range(n):
-            p1 = self._points[i]
-            p2 = self._points[(i + 1) % n]
-
-            if self.point_on_segment((x, y), p1, p2):
-                return True
-
-            if (p1[1] > y) != (p2[1] > y):
-                try:
-                    x_inters = ((y - p1[1]) * (p2[0] - p1[0])) / (p2[1] - p1[1]) + p1[0]
-                except ZeroDivisionError:
-                    continue
-
-                if x <= x_inters:
-                    inside = not inside
-
-        return inside
-
-    @staticmethod
-    def point_on_segment(pt, p1, p2):
-        x, y = pt
-        x1, y1 = p1
-        x2, y2 = p2
-
-        if (x < min(x1, x2) - 1e-8 or x > max(x1, x2) + 1e-8 or
-                y < min(y1, y2) - 1e-8 or y > max(y1, y2) + 1e-8):
-            return False
-
-        cross_product = (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
-        if abs(cross_product) > 1e-8:
-            return False
-
-        return True
 
 
 def main():

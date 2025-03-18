@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Polygon:
+class PolygonAlgorithm:
     def __init__(self, points):
         self.points = points
 
@@ -46,7 +46,7 @@ class Polygon:
             return None
 
 
-class Graham(Polygon):
+class Graham(PolygonAlgorithm):
     def get_points(self):
         points = sorted(self.points, key=lambda p: (p[0], p[1]))
 
@@ -67,7 +67,7 @@ class Graham(Polygon):
         return hull
 
 
-class Jarvis(Polygon):
+class Jarvis(PolygonAlgorithm):
     def get_points(self):
         def orientation(p, q, r):
             return (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
